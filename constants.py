@@ -22,6 +22,7 @@ elif s % 2 == 0 and 8 <= s <= 16:
 else:
     print("Pogresan unos dimenzija table!")
     print("Tabla postavljena na podrazumevanu vrednost 8x8")
+print()
 
 while True:
     opponent = input("Unesite protiv koga igrate (h - covek, c - racunar): ").lower()
@@ -34,6 +35,7 @@ while True:
     else:
         print("Igrate protiv coveka")
         break
+print()
 
 if opponent == 'c':
     first_player = input("Unesite ko igra prvi (h - covek, c - racunar): ").lower()
@@ -44,6 +46,7 @@ if opponent == 'c':
         FIRST_PLAYER = first_player
     else:
         print("Prvi igra covek")
+    print()
 
 
 first_move = input("Unesite ko je prvi na potezu (X - crni, O - beli): ").upper()
@@ -54,5 +57,10 @@ elif first_move == 'O':
     FIRST_MOVE = first_move
 else:
     print("Prvi potez ima igrac X (crni)")
+print()
 
-
+letters = []
+numbers = []
+for i in range(SIZE):
+    letters.append(chr(65 + i))
+    numbers.append(str(i + 1))

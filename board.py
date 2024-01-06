@@ -1,4 +1,4 @@
-from constants import SIZE, POSSIBLE_MOVES
+from constants import SIZE, POSSIBLE_MOVES, letters, numbers
 
 
 class Board:
@@ -46,7 +46,7 @@ class Board:
                     else:
                         print("   ", end='')
 
-                    for k in range(SIZE//2):
+                    for k in range(SIZE // 2):
                         col = row[k * 2]
                         print_str = ''
                         if col != 0 and len(col) > 0:
@@ -79,7 +79,7 @@ class Board:
                         print(f' {chr(65 + (i + 1) * j - 1)} ', end='')
                     else:
                         print("   ", end='')
-                    for k in range(SIZE//2):
+                    for k in range(SIZE // 2):
                         col = row[k * 2 + 1]
                         print_str = white * 4
                         if col != 0 and len(col) > 0:
@@ -90,7 +90,7 @@ class Board:
                                 else:
                                     print_str += col[:len(col)] + black * (3 - len(col))
                             elif j == 1:
-                                if len(col) < 3:
+                                if len(col) <= 3:
                                     print_str += black * 3
                                 elif 3 < len(col) < 6:
                                     print_str += col[3:len(col)] + black * (3 - (len(col) - 3))
@@ -113,12 +113,6 @@ class Board:
         stack_pos = int(stack_pos)
         move = move.upper()
 
-        # Provera da li postoji zadato polje na tabli
-        letters = []
-        numbers = []
-        for i in range(SIZE):
-            letters.append(chr(65 + i))
-            numbers.append(str(i + 1))
         if len(field) != 2 or field[0] not in letters or field[1] not in numbers:
             print("Pogresan unos polja")
             return False
@@ -147,14 +141,12 @@ class Board:
             return False
         dx, dy = POSSIBLE_MOVES[move.upper()]
         if row + dx < 0 or row + dx > 7 or col + dy < 0 or col + dy > 7:
-            # print(f'{row+dx}')
-            # print(f'{col+dy}')
             print("Ne moze se odigrati potez na ovom polju na tabli (van table)")
             return False
 
         # Provera velicine novog steka
         figures_to_move = stack[stack_pos:]
-        dest_stack = board[row+dx][col+dy]
+        dest_stack = board[row + dx][col + dy]
         if len(figures_to_move) + len(dest_stack) > 8:
             print("Velicina steka ne moze biti veca od 8")
             return False
@@ -170,10 +162,10 @@ class Board:
 
         if self.check_neighbour_fields(board, row, col):
             # ima suseda
-            if not board[row+dx][col+dy]:
+            if not board[row + dx][col + dy]:
                 print("Imate susedno polje na kom postoje figure.")
                 return False
-            return self.check_stack_restrictions(board, row, col, stack_pos, dx, dy, player_on_turn)
+            return self.check_stack_restrictions(board, row, col, stack_pos, dx, dy, player_on_turn)    # mozda da bude pre check_neighbour
         else:
             move_field = (row + dx, col + dy)
             start_node = (row, col)
@@ -186,40 +178,7 @@ class Board:
 
             for stack in nearest_stacks:
                 start_node = (row, col)
-
-                if start_node[0] - start_node[1] == stack[0] - stack[1] or \
-                        start_node[0] + start_node[1] == stack[0] + stack[1]:
-                    path = self.a_star_search(start_node, stack)
-                    paths.append(path)
-                else:
-                    if start_node[1] < stack[1]:    # na desno
-                        start_node = (start_node[0] + 1, start_node[1] + 1)
-                        path1 = self.a_star_search(start_node, stack)
-                        start_node = (start_node[0] - 2, start_node[1])
-                        path2 = self.a_star_search(start_node, stack)
-                        paths.append(path1)
-                        paths.append(path2)
-                    elif start_node[1] > stack[1]:  # na levo
-                        start_node = (start_node[0] + 1, start_node[1] - 1)
-                        path1 = self.a_star_search(start_node, stack)
-                        start_node = (start_node[0] - 2, start_node[1])
-                        path2 = self.a_star_search(start_node, stack)
-                        paths.append(path1)
-                        paths.append(path2)
-                    elif start_node[0] > stack[0]:  # na gore
-                        start_node = (start_node[0] - 1, start_node[1] + 1)
-                        path1 = self.a_star_search(start_node, stack)
-                        start_node = (start_node[0], start_node[1] - 2)
-                        path2 = self.a_star_search(start_node, stack)
-                        paths.append(path1)
-                        paths.append(path2)
-                    elif start_node[0] < stack[0]:  # na dole
-                        start_node = (start_node[0] + 1, start_node[1] + 1)
-                        path1 = self.a_star_search(start_node, stack)
-                        start_node = (start_node[0], start_node[1] - 2)
-                        path2 = self.a_star_search(start_node, stack)
-                        paths.append(path1)
-                        paths.append(path2)
+                paths += self.generate_paths(start_node, stack)
 
             if paths:
                 for path in paths:
@@ -232,6 +191,45 @@ class Board:
                 print("Nije moguce pronaci put A* algoritmom.")
                 return False
 
+    def generate_paths(self, start_node, stack):
+        paths = []
+        # po dijagonali
+        if start_node[0] - start_node[1] == stack[0] - stack[1] or \
+                start_node[0] + start_node[1] == stack[0] + stack[1]:
+            path = self.a_star_search(start_node, stack)
+            paths.append(path)
+        else:
+            if start_node[1] < stack[1] and start_node[0] + start_node[1] < stack[0] + stack[1]:  # nadesno
+                start_node = (start_node[0] + 1, start_node[1] + 1)
+                path1 = self.a_star_search(start_node, stack)
+                start_node = (start_node[0] - 2, start_node[1])
+                path2 = self.a_star_search(start_node, stack)
+                paths.append(path1)
+                paths.append(path2)
+            elif start_node[1] > stack[1] and start_node[0] + start_node[1] > stack[0] + stack[1]:  # nalevo
+                # (dodatni uslov jer u situaciji (1,1) -> (4,0) generise poteze nalevo, umesto nadole)
+                start_node = (start_node[0] + 1, start_node[1] - 1)
+                path1 = self.a_star_search(start_node, stack)
+                start_node = (start_node[0] - 2, start_node[1])
+                path2 = self.a_star_search(start_node, stack)
+                paths.append(path1)
+                paths.append(path2)
+            elif start_node[0] > stack[0]:  # nagore
+                start_node = (start_node[0] - 1, start_node[1] + 1)
+                path1 = self.a_star_search(start_node, stack)
+                start_node = (start_node[0], start_node[1] - 2)
+                path2 = self.a_star_search(start_node, stack)
+                paths.append(path1)
+                paths.append(path2)
+            elif start_node[0] < stack[0]:  # nadole
+                start_node = (start_node[0] + 1, start_node[1] + 1)
+                path1 = self.a_star_search(start_node, stack)
+                start_node = (start_node[0], start_node[1] - 2)
+                path2 = self.a_star_search(start_node, stack)
+                paths.append(path1)
+                paths.append(path2)
+        return paths
+
     def check_neighbour_fields(self, board, row, col):
         has_neighbour = False
         for i in range(-1, 2):
@@ -239,7 +237,7 @@ class Board:
                 if i == 0 and j == 0:
                     continue
                 if 0 <= row + i < SIZE and 0 <= col + j < SIZE:
-                    if board[row+i][col+j]:
+                    if board[row + i][col + j]:
                         has_neighbour = True
 
         return has_neighbour
@@ -254,15 +252,11 @@ class Board:
         prev_nodes[start] = None
         open_set.add(start)
 
-        # nearest_stacks = self.find_nearest_stacks(start)
-        # if not nearest_stacks:
-        #     print("Nema dostupnih stekova.")
-        #     return None
-
         while len(open_set) > 0 and (not found_end):
             node = None
             for next_node in open_set:
-                if node is None or g[next_node] + self.h_function(next_node, end) < g[node] + self.h_function(node, end):
+                if node is None or g[next_node] + self.h_function(next_node, end) < g[node] + self.h_function(node,
+                                                                                                              end):
                     node = next_node
 
             if node == end:
@@ -317,10 +311,8 @@ class Board:
         return distance
 
     def get_neighbors(self, node):
-        neighbors = []
-
-        neighbors = [(node[0]-1, node[1]-1), (node[0]-1, node[1]+1),
-                     (node[0]+1, node[1]-1), (node[0]+1, node[1]+1)]
+        neighbors = [(node[0] - 1, node[1] - 1), (node[0] - 1, node[1] + 1),
+                     (node[0] + 1, node[1] - 1), (node[0] + 1, node[1] + 1)]
 
         return list(x for x in neighbors)
 
@@ -331,27 +323,22 @@ class Board:
         for row in range(SIZE):
             for col in range(SIZE):
                 stack = board[row][col]
-                # if stack == self.board[start[0]][start[1]]:
-                #     continue
                 if stack:
                     stack_top = (row, col)
-                    # distance = self.manhattan_distance(start, stack_top)
                     distance = self.calculate_distance(start, stack_top)
-                    # print(f'distance {distance}, start: {start},  stack: {stack},  stacktop: {stack_top}')
                     if distance != 0 and distance < min_distance:
                         min_distance = distance
                         nearest_stacks = [stack_top]
                     elif distance != 0 and distance == min_distance:
                         nearest_stacks.append(stack_top)
 
-        # print(nearest_stacks)
         return nearest_stacks
 
     def check_stack_restrictions(self, board, row, col, stack_pos, dx, dy, player_on_turn):
         start_stack = board[row][col]
-        goal_stack = board[row+dx][col+dy]
+        goal_stack = board[row + dx][col + dy]
 
-        if not player_on_turn in start_stack:
+        if player_on_turn not in start_stack:
             print("Ne postoji vasa figura u steku.")
             return False
 
@@ -361,7 +348,7 @@ class Board:
             return False
 
         stack_to_move = start_stack[stack_pos:]
-        if goal_stack and len(goal_stack) <= stack_pos:
+        if stack_pos != 0 and (len(goal_stack) == 0 or len(goal_stack) <= stack_pos):
             print("Figura mora da se pomera na visini koja je veca od trenutne visine.")
             return False
 
@@ -369,8 +356,6 @@ class Board:
             print("Nova visina steka ne sme biti veca od 8 figura.")
             return False
 
-        # self.move_stack(start_stack, stack_pos, stack_to_move, goal_stack)
-        # print(stack_to_move)
         return True
 
     def move_stack(self, start_stack, stack_pos, stack_to_move, goal_stack, game):
@@ -385,4 +370,3 @@ class Board:
                 game.player1_stacks += 1
             else:
                 game.player2_stacks += 1
-
